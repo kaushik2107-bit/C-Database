@@ -263,6 +263,182 @@ void selectData(char database[]) {
     strcat(tmptmp, "/");
     strcat(tmptmp, table);
     strcat(tmptmp, ".tab");
+    printf("%s\n", tmptmp);
+    file = fopen(tmptmp, "r");
+    if (file == NULL) {
+        printf("Table does not exist");
+        newLine();
+        return;
+    }
+    fclose(file);
+    file = fopen(tmptmp, "ra");
+    if (file == NULL) {
+        printf("Some error occurred");
+        newLine();
+        return;
+    }
+
+
+    int check;
+    char code[10];
+    int index = 0;
+    printf("Select all columns(1/0): ");
+    scanf("%d", &check);
+    while ((getchar()) != '\n');
+
+    char colcol[400];
+    fscanf(file, "%[^\n]\n", colcol);
+    fclose(file);
+    file = fopen(tmptmp, "r");
+    int ll = 0;
+    for (int i=0; i<strlen(colcol); i++) {
+        if (colcol[i] == ',') ll++;
+    }
+    char cols_name[ll][100];
+
+    if (check == 0) {
+        code[index] = '0'; index++;
+        char col_details[400];
+        printf("Name the columns comma separated without space: ");
+        scanf("%s", col_details);
+        while ((getchar()) != '\n');
+        int cc = 0, cnt = 0;
+        for (int i=0; i<strlen(col_details); i++) {
+            if (col_details[i] == ',') {
+                cols_name[cnt][cc] = '\0';
+                cc = 0;
+                cnt++;
+            } else {
+                cols_name[cnt][cc] = col_details[i];
+                cc++;
+            }
+        }
+    }
+    else if (check == 1) {code[index] = '1'; index++;}
+
+    code[index] = '\0';
+    // printf("%s", code);
+    if (!strcmp(code, "0")) {
+        char colscols[400];
+        fscanf(file, "%[^\n]\n", colscols);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int cntt = 0, ccc = 0;
+        char cols_all[ll][100];
+        for (int i=1; i<strlen(colscols)-1; i++) {
+            if (colscols[i] == ',') {
+                cols_all[cntt][ccc] = '\0';
+                ccc = 0;
+                cntt++;
+            } else {
+                cols_all[cntt][ccc] = colscols[i];
+                ccc++;
+            }
+        }
+
+        char col_code[40];
+        int count = 0;
+
+        for (int i=0; i<ll; i++) {
+            int pt = 1;
+            for (int j=0; j<ll; j++) {
+                if (!strcmp(cols_all[i], cols_name[j])) {
+                    col_code[count] = '1';
+                    count++;
+                    col_code[count] = '\0';
+                    pt = 0;
+                }
+            }
+            if (pt) {
+                col_code[count] = '0';
+                count++;
+                col_code[count] = '\0';
+            }
+        }
+
+        // printf("%s\n", col_code);
+
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0, code_check = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                int cp = 0;
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                    code_check++;
+                } else {
+                    if (col_code[code_check] == '1') {
+                        dcrypt[cnt][cc] = columns[i];
+                        cc++;
+                    }
+                }
+            }
+
+            newLine();
+            for (int i=0; i<length; i++) {
+                printf("%20s", dcrypt[i]);
+            }
+        }
+    } else if (!strcmp(code, "1")) {
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            // printf("%10s\t%-20s\n", "No", "Database");
+            newLine();
+            for (int i=0; i<length; i++) {
+                printf("%20s", dcrypt[i]);
+            }
+        }
+    }
+    newLine();
+    newLine();
+}
+
+void countData(char database[]) {
+    newLine();
+    char table[50];
+    printf("Enter table name: ");
+    scanf("%[^\n]%*c", table);
+    if (!verifyName(table)) {
+        printf("Enter a valid table name\n");
+        newLine();
+        return;
+    }
+    FILE *file;
+    char tmptmp[500] = "databases/";
+    strcat(tmptmp, database);
+    strcat(tmptmp, "/");
+    strcat(tmptmp, table);
+    strcat(tmptmp, ".tab");
     // printf("%s\n", tmptmp);
     file = fopen(tmptmp, "r");
     if (file == NULL) {
@@ -278,32 +454,422 @@ void selectData(char database[]) {
         return;
     }
 
-    while (!feof(file)) {
-        char columns[400];
-        int i = 0;
-        fscanf(file, "%[^\n]\n", columns);
-        int length = 0;
-        for (int i=0; i<strlen(columns); i++) {
-            if (columns[i] == ',') length++;
+    printf("Enter any conditions (e.g. and(equal('column', 'value'),lessthan('column', 'value')): ");
+    char condition[400];
+    scanf("%[^\n]%*c", condition);
+
+    if (!strcmp(condition, "null")) {
+        int length = -1;
+        char tmp[100];
+        while(!feof(file)) {
+            fscanf(file, "%s", tmp);
+            length++;
+        }
+        
+        printf("%20s\n", "count(rows)");
+        printf("%20d\n", length);
+
+    } else {
+        
+    }
+
+    newLine();
+    newLine();
+}
+
+void runQueries(char database[]) {
+    int commandcommand;
+    printf("\n");
+    printf("Available Commands\n");
+    printf("1. Display count of patient\n");
+    printf("2. Display the count of patient based on gender\n");
+    printf("3. Display the age wise count of patient\n");
+    printf("4. Display the count of patient areawise\n");
+    printf("5. Admitted on same date\n");
+    printf("6. Discharged on same date\n");
+    printf("7. Patients treated under the doctor\n");
+    printf("8. Patients treated under the male doctor\n");
+    printf("9. Patients treated under the female doctor area wise\n");
+    printf("\n");
+
+    newLine();
+    printf("Enter the number of the command to execute: ");
+    scanf("%d", &commandcommand);
+    while ((getchar()) != '\n');
+
+    if (commandcommand == 1) {
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
         }
 
-        int cnt = 0, cc = 0;
-        char dcrypt[length][100];
-        for (int i=1; i<strlen(columns)-1; i++) {
-            if (columns[i] == ',') {
-                dcrypt[cnt][cc] = '\0';
-                cc = 0;
-                cnt++;
-            } else {
-                dcrypt[cnt][cc] = columns[i];
-                cc++;
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+        int ccpc = -1;
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+            ccpc++;
+            // printf("%10s\t%-20s\n", "No", "Database");
+        }
+        newLine();
+        printf("The number of patients are: ");
+        printf("%d", ccpc);
+        newLine();
+
+    } else if (commandcommand == 2) {
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
+        }
+
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+        int ccpc1 = 0, ccpc2 = 0;
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            for (int i=0; i<length; i++) {
+                if (i%4 == 3) {
+                    if (dcrypt[i][0] == 'M') {
+                        ccpc1++;
+                    } else if (dcrypt[i][0] == 'F') {
+                        ccpc2++;
+                    }
+                }
+            }
+
+            
+            // printf("%10s\t%-20s\n", "No", "Database");
+        }
+        newLine();
+        printf("The number of Male patients: ");
+        printf("%d", ccpc1);
+        newLine();
+        printf("The number of Female patients: ");
+        printf("%d", ccpc2);
+        newLine();
+ 
+    } else if (commandcommand == 3) {
+        int age[100] = {0};
+        while ((getchar()) != '\n');
+
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
+        }
+
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+        
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            for (int i=0; i<length; i++) {
+                if (i%4 == 2) {
+                    int ageage = atoi(dcrypt[i]);
+                    age[ageage]++;
+                }
+            }
+            // printf("%10s\t%-20s\n", "No", "Database");
+        }
+        newLine();
+        printf("\tAge\tValue\n");
+        for (int i=0; i<100; i++) {
+            if (i != 0 && age[i] !=0) {
+                printf("\t%d -> ", i);
+                printf("\t%d\n", age[i]);
             }
         }
 
-        // printf("%10s\t%-20s\n", "No", "Database");
-        newLine();
-        for (int i=0; i<length; i++) {
-            printf("%10s", dcrypt[i]);
+    } else if (commandcommand == 4) {
+        printf("%d", commandcommand);
+    } else if (commandcommand == 5) {
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/doctor-patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
+        }
+
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+
+        char date[10];
+        printf("Enter date in yyyy-mm-dd format: ");
+        scanf("%s", date);
+        while ((getchar()) != '\n');
+        int chcceck = 1;
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            if (chcceck) {
+                for (int i=0; i<length; i++) {
+                    chcceck = 0;
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+
+            if (!strcmp(dcrypt[2], date)) {
+                for (int i=0; i<length; i++) {
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+            
+            // printf("%10s\t%-20s\n", "No", "Database");
+        }
+    } else if (commandcommand == 6) {
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/doctor-patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
+        }
+
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+
+        char date[10];
+        printf("Enter date in yyyy-mm-dd format: ");
+        scanf("%s", date);
+        while ((getchar()) != '\n');
+        int chcceck = 1;
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            if (chcceck) {
+                for (int i=0; i<length; i++) {
+                    chcceck = 0;
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+
+            if (!strcmp(dcrypt[3], date)) {
+                for (int i=0; i<length; i++) {
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+            
+            // printf("%10s\t%-20s\n", "No", "Database");
+        }
+    } else if (commandcommand == 7) {
+        FILE *file;
+        char tmptmp[500] = "databases/DBMS2/doctor-patient.tab";
+        // printf("%s", tmptmp);
+        file = fopen(tmptmp, "r");
+        if (file == NULL) {
+            printf("Table does not exist");
+            newLine();
+            return;
+        }
+
+        char colcol[400];
+        fscanf(file, "%[^\n]\n", colcol);
+        fclose(file);
+        file = fopen(tmptmp, "r");
+        int ll = 0;
+        for (int i=0; i<strlen(colcol); i++) {
+            if (colcol[i] == ',') ll++;
+        }
+        char cols_name[ll][100];
+
+        char date[10];
+        printf("Enter doctorId: ");
+        scanf("%s", date);
+        while ((getchar()) != '\n');
+        int chcceck = 1;
+        while (!feof(file)) {
+            char columns[400];
+            int i = 0;
+            fscanf(file, "%[^\n]\n", columns);
+            int length = 0;
+            for (int i=0; i<strlen(columns); i++) {
+                if (columns[i] == ',') length++;
+            }
+
+            int cnt = 0, cc = 0;
+            char dcrypt[length][100];
+            for (int i=1; i<strlen(columns)-1; i++) {
+                if (columns[i] == ',') {
+                    dcrypt[cnt][cc] = '\0';
+                    cc = 0;
+                    cnt++;
+                } else {
+                    dcrypt[cnt][cc] = columns[i];
+                    cc++;
+                }
+            }
+
+            if (chcceck) {
+                for (int i=0; i<length; i++) {
+                    chcceck = 0;
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+
+            if (!strcmp(dcrypt[0], date)) {
+                for (int i=0; i<length; i++) {
+                    printf("%20s", dcrypt[i]);
+                }
+                newLine();
+            }
+            
+            // printf("%10s\t%-20s\n", "No", "Database");
         }
     }
     newLine();
@@ -323,6 +889,7 @@ int main() {
     printf("6. select table\n");
     printf("7. insert data\n");
     printf("8. select data\n");
+    printf("9. run queries\n");
     printf("\n");
 
     char command[500];
@@ -332,6 +899,7 @@ int main() {
     currentTable[39] = '\0';
     while(strcmp(command, "exit")) {
         printDatabase(currentDatabase, currentTable);
+        fflush(stdin);
         scanf("%[^\n]%*c", command);
         commandToLower(command);
         
@@ -436,6 +1004,25 @@ int main() {
                 continue;
             }
             selectData(currentDatabase);
+        } else if (strStartsWith(command, "count data;")) {
+            if (!verifyDatabase(currentDatabase)) {
+                printf("No database selected. To select database run 'select database;'");
+                newLine();
+                continue;
+            }
+            if (!verifyTable(currentDatabase, currentTable)) {
+                printf("No table selected. To select table run 'select table;'");
+                newLine();
+                continue;
+            }
+            countData(currentDatabase);
+        } else if (strStartsWith(command, "run queries;")) {
+            if (!verifyDatabase(currentDatabase)) {
+                printf("No database selected. To select database run 'select database;'");
+                newLine();
+                continue;
+            }
+            runQueries(currentDatabase);
         }
     }
 }
